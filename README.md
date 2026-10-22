@@ -8,7 +8,7 @@ Full description, settings and FAQ: [mod page](publish/TCG_Mod_Profiles/README.m
 
 ## Install
 
-Players: install it from Thunderstore (r2modman) or Nexus Mods. Requires BepInEx 5 and [TCG Save Manager](https://github.com/dr4z0or/TCG-Save-Manager).
+**Download:** [Nexus Mods](https://www.nexusmods.com/tcgcardshopsimulator/mods/1929) (Thunderstore / r2modman: coming soon). Requires BepInEx 5 and [TCG Save Manager](https://github.com/dr4z0or/TCG-Save-Manager).
 
 ## Building from source (Windows, .NET SDK 8)
 
@@ -32,4 +32,4 @@ Install: `TCG.ModProfiles.dll` in `BepInEx/plugins/TCGModProfiles`, `TCG.ModProf
 
 ---
 
-**En français :** Des mods et des packs Enhanced Prefab Loader différents pour chaque boutique ; le jeu se relance avec les bons mods. Nécessite TCG Save Manager. Les joueurs l'installent depuis Thunderstore ou Nexus ; ce dépôt contient le code source.
+**En français :** Des mods et des packs Enhanced Prefab Loader différents pour chaque boutique ; le jeu se relance avec les bons mods. Nécessite TCG Save Manager. Les joueurs le téléchargent sur [Nexus Mods](https://www.nexusmods.com/tcgcardshopsimulator/mods/1929) (bientôt sur Thunderstore) ; ce dépôt contient le code source.
