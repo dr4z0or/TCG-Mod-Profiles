@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.0.1
+- Loading a shop ("Continue") and starting the game no longer freeze for several seconds when a very large mod is installed (Collection Tracker's DLL is over 750 MB). Mod Profiles used to read every installed mod in full to identify it; each mod's fingerprint is now remembered and computed again only when the file changes, and mod names and versions are read without loading the whole file.
+
 ## 1.0.0 — first public release
 - First public version, tested with the published packages (r2modman layout).
 

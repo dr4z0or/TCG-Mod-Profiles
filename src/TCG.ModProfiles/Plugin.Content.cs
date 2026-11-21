@@ -25,12 +25,13 @@ namespace TCG.ModProfiles
                 var id="content:"+descriptor.BundleId;
                 modNames[id]="Pack · "+(string.IsNullOrWhiteSpace(descriptor.Name)?descriptor.BundleId:descriptor.Name);
                 contentPaths[Path.GetFullPath(file)]=id;
-                yield return new InstalledMod{Id=id,Version="1",Sha256=LabStore.Hash(file),Assembly=file,Dependencies=new[]{new ModDependency{Id="EnhancedPrefabLoader",Required=true},new ModDependency{Id="EnhancedPrefabLoader.API",Required=true}}};
+                yield return new InstalledMod{Id=id,Version="1",Sha256=Hashes.Hash(file),Assembly=file,Dependencies=new[]{new ModDependency{Id="EnhancedPrefabLoader",Required=true},new ModDependency{Id="EnhancedPrefabLoader.API",Required=true}}};
             }
         }
         private void InstallContentFilter()
         {
             var inventory=ContentInventory().GroupBy(m=>m.Id).Select(g=>g.First()).ToArray();
+            Hashes.Save();
             ModProfile? startup=null;
             var root=Directory.GetParent(campaignsRoot)!.FullName;
             if(File.Exists(Path.Combine(root,"mod-profile-selection.xml")))startup=TCG.SaveManager.Core.ModProfiles.Load(campaignsRoot,Shared.StartupSelection.Read(root));

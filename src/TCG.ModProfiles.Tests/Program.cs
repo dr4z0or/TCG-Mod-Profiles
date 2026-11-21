@@ -47,3 +47,30 @@ if(ProfileMessages.Describe("Dépendance requise : mod.a.extra → mod.a",displa
 if(ProfileMessages.Describe("Mod actif absent : unknown.mod",displayNames)!="Mod actif absent : unknown.mod") throw new Exception("Identifiant inconnu altéré.");
 if(ProfileMessages.Describe("other",displayNames)!="mod.a") throw new Exception("Remplacement de nom en cascade.");
 Console.WriteLine("OK : noms lisibles, identifiants proches distincts, noms inconnus conservés.");
+// 1.0.1 : mod file hashes are remembered by size and date, and stay correct when a file changes.
+var cacheRoot = Path.Combine(Path.GetTempPath(), "TCG-hash-tests-" + Guid.NewGuid().ToString("N"));
+Directory.CreateDirectory(cacheRoot);
+var cacheFile = Path.Combine(cacheRoot, "mod-hash-cache.txt");
+var dll = Path.Combine(cacheRoot, "Mod.dll");
+File.WriteAllBytes(dll, System.Text.Encoding.UTF8.GetBytes("version 1"));
+string Sha(string f) { using (var s = System.Security.Cryptography.SHA256.Create()) return BitConverter.ToString(s.ComputeHash(File.ReadAllBytes(f))).Replace("-", ""); }
+var cache = new FileHashCache(cacheFile);
+if (cache.Hash(dll) != Sha(dll) || cache.Computed != 1) throw new Exception("Empreinte incorrecte.");
+if (cache.Hash(dll) != Sha(dll) || cache.Computed != 1) throw new Exception("Fichier inchangé relu.");
+cache.Save();
+var reloaded = new FileHashCache(cacheFile);
+if (reloaded.Hash(dll) != Sha(dll) || reloaded.Computed != 0) throw new Exception("Cache non conservé entre deux lancements.");
+File.WriteAllBytes(dll, System.Text.Encoding.UTF8.GetBytes("version 2, longer"));
+if (reloaded.Hash(dll) != Sha(dll) || reloaded.Computed != 1) throw new Exception("Mod mis à jour : ancienne empreinte.");
+var stamp = File.GetLastWriteTimeUtc(dll);
+File.WriteAllBytes(dll, System.Text.Encoding.UTF8.GetBytes("version 3, longer"));
+File.SetLastWriteTimeUtc(dll, stamp.AddSeconds(5));
+if (reloaded.Hash(dll) != Sha(dll) || reloaded.Computed != 2) throw new Exception("Même taille, autre date : ancienne empreinte.");
+reloaded.Save();
+File.WriteAllText(cacheFile, "garbage\n1|2|zz|" + dll + "\n");
+var damaged = new FileHashCache(cacheFile);
+if (damaged.Hash(dll) != Sha(dll) || damaged.Computed != 1) throw new Exception("Cache abîmé utilisé.");
+File.Delete(dll); damaged.Save();
+if (File.ReadAllText(cacheFile).Contains("Mod.dll")) throw new Exception("Mod supprimé gardé dans le cache.");
+File.Delete(cacheFile); Directory.Delete(cacheRoot);
+Console.WriteLine("OK : empreintes des mods mémorisées, recalculées si taille ou date changent, cache abîmé ignoré.");

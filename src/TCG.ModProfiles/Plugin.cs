@@ -10,7 +10,7 @@ using UnityEngine;
 using static TCG.Shared.Lang;
 namespace TCG.ModProfiles
 {
-    [BepInPlugin("local.tcg.modprofiles", "TCG Mod Profiles", "1.0.0")]
+    [BepInPlugin("local.tcg.modprofiles", "TCG Mod Profiles", "1.0.1")]
     [BepInDependency("local.tcg.savemanager.diagnostics")]
     public sealed partial class Plugin : BaseUnityPlugin
     {
@@ -18,6 +18,9 @@ namespace TCG.ModProfiles
         private GUIStyle cardStyle = null!, activeCardStyle = null!, nameStyle = null!, bodyStyle = null!, mutedStyle = null!, blueButton = null!, quietButton = null!, goldButton = null!;
         private bool managerVisible;
         private Campaign[] campaigns = Array.Empty<Campaign>();
+        // 1.0.1 : mod files are hashed once, then only when their size or date changes.
+        private Shared.FileHashCache? hashes;
+        private Shared.FileHashCache Hashes => hashes ??= new Shared.FileHashCache(Path.Combine(Directory.GetParent(campaignsRoot)!.FullName, "mod-hash-cache.txt"));
         private bool IsAtTitle()
         {
             var type = HarmonyLib.AccessTools.TypeByName("CGameManager");
@@ -83,7 +86,7 @@ namespace TCG.ModProfiles
                 
                 modNames[plugin.Metadata.GUID] = plugin.Metadata.Name;
                 return new InstalledMod {
-                    Id = plugin.Metadata.GUID, Name = plugin.Metadata.Name, Version = plugin.Metadata.Version.ToString(), Sha256 = LabStore.Hash(plugin.Location), Assembly = plugin.Location,
+                    Id = plugin.Metadata.GUID, Name = plugin.Metadata.Name, Version = plugin.Metadata.Version.ToString(), Sha256 = Hashes.Hash(plugin.Location), Assembly = plugin.Location,
                     Essential = plugin.Metadata.GUID == "local.tcg.savemanager.diagnostics" || plugin.Metadata.GUID == "local.tcg.modprofiles" || plugin.Metadata.GUID == "local.tcg.gamemodes",
                     Dependencies = plugin.Dependencies.Select(d => new ModDependency {
                         Id = d.DependencyGUID, Required = (d.Flags & BepInDependency.DependencyFlags.HardDependency) != 0,
@@ -91,6 +94,7 @@ namespace TCG.ModProfiles
                     Incompatibilities = plugin.Incompatibilities.Select(d => d.IncompatibilityGUID).ToArray()
                 };
             }).Concat(ContentInventory()).GroupBy(m=>m.Id).Select(g=>g.First()).OrderBy(m => modNames[m.Id], StringComparer.OrdinalIgnoreCase).ToArray();
+            Hashes.Save();
             modSettings = TCG.SaveManager.Core.ModProfiles.LoadSettings(campaignsRoot);
             var stored = TCG.SaveManager.Core.ModProfiles.Load(campaignsRoot, campaign.Id);
             var profile = TCG.SaveManager.Core.ModProfiles.Reconcile(stored, inventory, modSettings.NewMods);

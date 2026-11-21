@@ -24,7 +24,11 @@ namespace TCG.ModProfiles
                 {
                     try
                     {
-                        using (var assembly = AssemblyDefinition.ReadAssembly(file, new ReaderParameters { AssemblyResolver = resolver, InMemory = true }))
+                        // 1.0.1 : read from the file on demand instead of loading it whole in memory
+                        // (Collection Tracker's DLL is over 750 MB of embedded images). The stream is
+                        // shared and closed right after, so the DLL is never locked.
+                        using (var stream = new FileStream(file, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete))
+                        using (var assembly = AssemblyDefinition.ReadAssembly(stream, new ReaderParameters { AssemblyResolver = resolver, ReadingMode = ReadingMode.Deferred }))
                         foreach (var type in Types(assembly.MainModule.Types))
                         {
                             var info = (PluginInfo?)AccessTools.Method(typeof(Chainloader), "ToPluginInfo").Invoke(null, new object[] { type });
